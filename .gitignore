@@ -1,0 +1,51 @@
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Bytecode y caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Archivos de configuración del intérprete o IDEs
+.vscode/
+.idea/
+*.swp
+*.bak
+
+# Archivos de logs o temporales
+*.log
+*.tmp
+*.DS_Store
+
+# Archivos de base de datos temporales (en caso de SQLite local)
+*.db
+*.sqlite3
+
+# Archivos de pruebas
+test_results/
+coverage/
+
+# Configuración personal
+.env
+.env.*
+
+# Archivos del sistema
+Thumbs.db
+desktop.ini
+
+# Archivos generados por PyInstaller (si haces .exe)
+dist/
+build/
+*.spec
+
+# Archivos de sesión o generados automáticamente
+attendix_db.session.sql
+
+# Imágenes o capturas generadas
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tiff
