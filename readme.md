@@ -7,33 +7,33 @@
 
 ```
 ATTENDIX/
-├── attendance/
-│   ├── __init__.py
+├── attendance/               # Lógica para manejo de asistencia
 │   └── attendance.py
 │
-├── database/
-│   ├── __init__.py
+├── database/                 # Módulo de conexión y gestión de la base de datos
 │   └── db.py
 │
-├── face_recognition/
-│   ├── __init__.py
-│   ├── detect_face.py
-│   ├── embedder.py
-│   └── recognizer.py
+├── face_recognition/        # Módulo de reconocimiento facial
+│   ├── detect_face.py       # Detección de rostros con OpenCV
+│   ├── embedder.py          # Generación de embeddings con FaceNet
+│   └── recognizer.py        # Comparación y reconocimiento de rostros
 │
-├── .vscode/
+├── UI/                      # Interfaz de usuario con PyQt5
+│   ├── components/          # Widgets personalizados
+│   ├── resources/           # Imágenes, íconos, y assets visuales
+│   └── views/               # Vistas principales de la interfaz
+│       └── main_window.py   # Ventana principal de la aplicación
 │
-├── __init__.py
-├── .env
-├── config.py
-├── main.py
-├── recognizer_main.py
-├── register_user.py
-├── ver_asistencias.py
-├── PRUEBAS.py
-├── introduccion/
-├── readme
-└── requirements.txt
+├── .gitignore               # Archivos ignorados por Git
+├── config.py                # Configuraciones globales del sistema
+├── main.py                  # Punto de entrada de la aplicación
+├── recognizer_main.py       # Script de reconocimiento facial (interfaz CLI)
+├── register_user.py         # Registro de nuevos estudiantes
+├── ver_asistencias.py       # Visualización de registros de asistencia
+├── PRUEBAS.py               # Archivo auxiliar de pruebas
+├── requirements.txt         # Lista de dependencias
+└── readme.md                # Este archivo
+
 ```
 
 ---
