@@ -72,10 +72,12 @@ Desde PowerShell, ejecutar:
 pip install -r requirements.txt
 
 3. **Crea un archivo `.env`** en la raíz del proyecto con tus credenciales de base de datos:
+```
 DB_HOST=localhost
 DB_USER=tu_usuario
 DB_PASSWORD=tu_contraseña
 DB_NAME=nombre_de_tu_bd
+```
 
 4. **Ejecuta el sistema**:
 python recognizer_main.py
