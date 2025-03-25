@@ -50,14 +50,14 @@ ATTENDIX/
 ## 🧼 Sistema de Limpieza Automática
 Este proyecto incluye un script en PowerShell (clean_project.ps1) que permite limpiar de forma automática archivos temporales, carpetas de caché y archivos compilados de Python.
 
-## 🔧 ¿Qué elimina el script?
+### 🔧 ¿Qué elimina el script?
 - Carpetas __pycache__
 - Carpetas que contienen cache en su nombre
 - Archivos .pyc y .pyo
 - Archivos temporales .tmp
 - Logs antiguos (.log) (si decides incluirlo también)
 
-## ▶️ Cómo usarlo:
+### ▶️ Cómo usarlo:
 Desde PowerShell, ejecutar: 
 ```
 .\clean_project.ps1
