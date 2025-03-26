@@ -9,4 +9,4 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
 # Umbral de reconocimiento
-RECOGNITION_THRESHOLD = 0.6
+RECOGNITION_THRESHOLD = 10

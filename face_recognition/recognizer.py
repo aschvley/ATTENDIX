@@ -1,7 +1,7 @@
 import numpy as np
+import json
 from database.db import get_connection
 from config import RECOGNITION_THRESHOLD
-from ast import literal_eval  # para convertir string a lista segura
 
 def get_known_embeddings():
     conn = get_connection()
@@ -10,7 +10,7 @@ def get_known_embeddings():
 
     conocidos = []
     for row in cursor.fetchall():
-        emb_array = np.array(literal_eval(row["embedding"]))  # Convertimos el string a array
+        emb_array = np.array(json.loads(row["embedding"]))  # Convertir JSON a lista y luego a array de NumPy
         conocidos.append({
             "id": row["id"],
             "nombre": row["nombre"],
@@ -24,7 +24,8 @@ def get_known_embeddings():
 def recognize_face(embedding):
     estudiantes = get_known_embeddings()
     for estudiante in estudiantes:
-        distancia = np.linalg.norm(embedding - estudiante["embedding"])
+        embedding_array = np.array(estudiante["embedding"])
+        distancia = np.linalg.norm(embedding - embedding_array)
         if distancia < RECOGNITION_THRESHOLD:
             return estudiante  # Retornamos el dict completo del estudiante
     return None

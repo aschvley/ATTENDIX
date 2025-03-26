@@ -8,13 +8,13 @@ __pycache__/
 *.py[cod]
 *.pyo
 
-# Archivos de configuración del intérprete o IDEs
+# Archivos de configuración del intérprete/IDEs
 .vscode/
 .idea/
 *.swp
 *.bak
 
-# Archivos de logs o temporales
+# Logs o temporales
 *.log
 *.tmp
 *.DS_Store
@@ -35,7 +35,7 @@ coverage/
 Thumbs.db
 desktop.ini
 
-# Archivos generados por PyInstaller (si haces .exe)
+# Archivos generados por PyInstaller
 dist/
 build/
 *.spec
