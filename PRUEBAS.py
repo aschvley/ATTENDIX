@@ -1,43 +1,62 @@
 import cv2
 import numpy as np
-from face_recognition.embedder import get_embedding
-from database.db import get_connection
-import json
+from keras_facenet import FaceNet
+from sklearn.preprocessing import Normalizer
 
-def generar_y_guardar_embeddings():
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
+# Cargar el modelo FaceNet
+model = FaceNet()
 
-    cursor.execute("SELECT id, nombre, cedula FROM estudiantes WHERE embedding = '[]' OR embedding IS NULL")
-    estudiantes = cursor.fetchall()
+# Inicializar el clasificador de rostros de OpenCV
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
-    if not estudiantes:
-        print("✅ Todos los estudiantes ya tienen embeddings.")
-        return
+# Función para obtener los embeddings de la imagen facial
+def get_embedding(face_pixels):
+    # El modelo de FaceNet espera imágenes con un tamaño de 160x160 píxeles
+    face_pixels = cv2.resize(face_pixels, (160, 160))
+    face_pixels = np.expand_dims(face_pixels, axis=0)  # Añadir batch dimension
+    face_pixels = face_pixels.astype('float32') / 255.0  # Normalización
+    
+    # Obtener los embeddings utilizando el modelo
+    embedding = model.embeddings(face_pixels)
+    return embedding
 
-    for estudiante in estudiantes:
-        print(f"⚡ Generando embedding para {estudiante['nombre']} ({estudiante['cedula']})")
+# Inicializar la cámara
+cap = cv2.VideoCapture(1)
+
+while True:
+    # Capturar cada fotograma de la cámara
+    ret, frame = cap.read()
+
+    # Convertir la imagen a escala de grises para la detección de rostros
+    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    
+    # Detectar rostros en la imagen
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+    for (x, y, w, h) in faces:
+        # Dibujar un rectángulo alrededor del rostro detectado
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
         
-        # Cargar la imagen del estudiante (asegúrate de tener las imágenes guardadas)
-        img_path = f"data/imagenes/{estudiante['cedula']}.jpg"
-        img = cv2.imread(img_path)
+        # Extraer la región del rostro
+        face = frame[y:y+h, x:x+w]
+        
+        # Obtener el embedding para esta cara
+        embedding = get_embedding(face)
+        
+        # Normalizar el embedding (si es necesario)
+        normalizer = Normalizer(norm='l2')
+        normalized_embedding = normalizer.transform(embedding)
+        
+        # Imprimir el embedding en la terminal
+        print("Embedding del rostro:", normalized_embedding)
 
-        if img is None:
-            print(f"❌ No se encontró la imagen para {estudiante['nombre']}.")
-            continue
+    # Mostrar el fotograma en una ventana
+    cv2.imshow('Camera Feed', frame)
 
-        rostro_embedding = get_embedding(img)
+    # Salir si se presiona la tecla 'q'
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
 
-        if rostro_embedding is not None:
-            embedding_json = json.dumps(rostro_embedding.tolist())  # Convertir a formato JSON
-            cursor.execute("UPDATE estudiantes SET embedding = %s WHERE id = %s", (embedding_json, estudiante["id"]))
-            conn.commit()
-            print(f"✅ Embedding guardado para {estudiante['nombre']}.")
-        else:
-            print(f"⚠️ No se pudo generar embedding para {estudiante['nombre']}.")
-
-    conn.close()
-    print("🔹 Proceso completado.")
-
-if __name__ == "__main__":
-    generar_y_guardar_embeddings()
+# Liberar la cámara y cerrar las ventanas
+cap.release()
+cv2.destroyAllWindows()
