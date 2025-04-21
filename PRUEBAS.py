@@ -1,62 +1,31 @@
-import cv2
+# para obtener embeddings de las fotos!
+
+from deepface import DeepFace
 import numpy as np
-from keras_facenet import FaceNet
-from sklearn.preprocessing import Normalizer
 
-# Cargar el modelo FaceNet
-model = FaceNet()
+def obtener_embedding_consola(ruta_imagen, model_name="ArcFace"):
+    """
+    Obtiene el embedding facial de una imagen y lo imprime en la consola
+    como un string separado por comas.
 
-# Inicializar el clasificador de rostros de OpenCV
-face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+    Args:
+        ruta_imagen (str): Ruta de la imagen.
+        model_name (str): Nombre del modelo de DeepFace a utilizar.
+    """
+    try:
+        embedding_list = DeepFace.represent(img_path=ruta_imagen, model_name=model_name, enforce_detection=True)
+        if embedding_list:
+            embedding_array = embedding_list[0]['embedding']
+            embedding_str = ",".join(map(str, embedding_array))
+            print("Embedding facial:")
+            print(embedding_str)
+            print(f"\nLongitud del embedding: {len(embedding_array)}")
+        else:
+            print(f"No se detectaron rostros en la imagen: {ruta_imagen}")
+    except Exception as e:
+        print(f"Ocurrió un error al procesar la imagen {ruta_imagen}: {e}")
 
-# Función para obtener los embeddings de la imagen facial
-def get_embedding(face_pixels):
-    # El modelo de FaceNet espera imágenes con un tamaño de 160x160 píxeles
-    face_pixels = cv2.resize(face_pixels, (160, 160))
-    face_pixels = np.expand_dims(face_pixels, axis=0)  # Añadir batch dimension
-    face_pixels = face_pixels.astype('float32') / 255.0  # Normalización
-    
-    # Obtener los embeddings utilizando el modelo
-    embedding = model.embeddings(face_pixels)
-    return embedding
+# Ejemplo de uso para una foto específica
+ruta_de_la_foto = r"C:\Users\Camila\Desktop\database\foticos\5129641778947927974.jpg"  # ¡Reemplaza con la ruta de tu foto!
 
-# Inicializar la cámara
-cap = cv2.VideoCapture(1)
-
-while True:
-    # Capturar cada fotograma de la cámara
-    ret, frame = cap.read()
-
-    # Convertir la imagen a escala de grises para la detección de rostros
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-    # Detectar rostros en la imagen
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
-
-    for (x, y, w, h) in faces:
-        # Dibujar un rectángulo alrededor del rostro detectado
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        
-        # Extraer la región del rostro
-        face = frame[y:y+h, x:x+w]
-        
-        # Obtener el embedding para esta cara
-        embedding = get_embedding(face)
-        
-        # Normalizar el embedding (si es necesario)
-        normalizer = Normalizer(norm='l2')
-        normalized_embedding = normalizer.transform(embedding)
-        
-        # Imprimir el embedding en la terminal
-        print("Embedding del rostro:", normalized_embedding)
-
-    # Mostrar el fotograma en una ventana
-    cv2.imshow('Camera Feed', frame)
-
-    # Salir si se presiona la tecla 'q'
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Liberar la cámara y cerrar las ventanas
-cap.release()
-cv2.destroyAllWindows()
+obtener_embedding_consola(ruta_de_la_foto)
