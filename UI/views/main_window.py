@@ -1,18 +1,19 @@
-# UI/main_window.py
-
 import cv2
 import numpy as np
 from PyQt5.QtWidgets import QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtCore import QTimer, Qt
+import sys, os
 
-import sys
-import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from face_recognition.embedder import get_embedding
 from face_recognition.detect_face import detect_faces
 from database.db import buscar_estudiante_por_embedding, registrar_asistencia
+from deepface import DeepFace  # Para precargar modelo
+
+# 🚀 Precargar el modelo solo una vez al inicio
+model = DeepFace.build_model("Facenet")
 
 class AttendixApp(QMainWindow):
     def __init__(self):
@@ -44,9 +45,13 @@ class AttendixApp(QMainWindow):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_frame)
         self.cap = None
+        self.frame_count = 0  # 🧠 Para escanear rostros cada N frames
 
     def start_camera(self):
-        self.cap = cv2.VideoCapture(0)  # Usa 1 si es la Logitech
+        self.cap = cv2.VideoCapture(0)  # 1 logitech, 0 laptop
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)   # Menor resolución = mejor rendimiento
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+        
         if not self.cap.isOpened():
             self.status_label.setText("❌ No se pudo acceder a la cámara.")
             return
@@ -66,11 +71,18 @@ class AttendixApp(QMainWindow):
             self.status_label.setText("❌ Error al leer el frame.")
             return
 
+        # 🔁 Solo procesamos cada 5 frames
+        self.frame_count += 1
+        if self.frame_count % 5 != 0:
+            self._update_display(frame)
+            return
+
         faces = detect_faces(frame)
         for (x, y, w, h) in faces:
             face_img = frame[y:y+h, x:x+w]
             face_img = cv2.resize(face_img, (160, 160))
-            embedding = get_embedding(face_img)
+            embedding = get_embedding(face_img, model=model)  # 
+            Usar modelo precargado
             estudiante = buscar_estudiante_por_embedding(embedding)
 
             if estudiante:
@@ -81,6 +93,9 @@ class AttendixApp(QMainWindow):
 
             cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
 
+        self._update_display(frame)
+
+    def _update_display(self, frame):
         rgb_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         h, w, ch = rgb_image.shape
         qt_image = QImage(rgb_image.data, w, h, ch * w, QImage.Format_RGB888)
