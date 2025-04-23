@@ -81,8 +81,7 @@ class AttendixApp(QMainWindow):
         for (x, y, w, h) in faces:
             face_img = frame[y:y+h, x:x+w]
             face_img = cv2.resize(face_img, (160, 160))
-            embedding = get_embedding(face_img, model=model)  # 
-            Usar modelo precargado
+            embedding = get_embedding(face_img, model=model)  # Usar modelo precargado
             estudiante = buscar_estudiante_por_embedding(embedding)
 
             if estudiante:
