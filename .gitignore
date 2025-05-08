@@ -19,7 +19,7 @@ __pycache__/
 *.tmp
 *.DS_Store
 
-# Archivos de base de datos temporales (en caso de SQLite local)
+# Archivos de base de datos temporales
 *.db
 *.sqlite3
 

@@ -26,6 +26,6 @@ def obtener_embedding_consola(ruta_imagen, model_name="ArcFace"):
         print(f"Ocurrió un error al procesar la imagen {ruta_imagen}: {e}")
 
 # Ejemplo de uso para una foto específica
-ruta_de_la_foto = r"C:\Users\Camila\Desktop\database\foticos\5129641778947927974.jpg"  # ¡Reemplaza con la ruta de tu foto!
+ruta_de_la_foto = r"C:\Users\Camila\Desktop\database\foticos\5122997309922192770.jpg"  # ¡Reemplaza con la ruta de tu foto!
 
 obtener_embedding_consola(ruta_de_la_foto)

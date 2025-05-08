@@ -9,7 +9,8 @@ from database.db import get_connection
 def get_embedding(image):
     """
     Genera el embedding de una imagen usando DeepFace con el modelo FaceNet512.
-    
+    El modelo se carga dentro de la función.
+
     :param image: Imagen en formato OpenCV (BGR).
     :return: Embedding como un vector numpy de 512 dimensiones o None si falla.
     """
@@ -17,15 +18,23 @@ def get_embedding(image):
         return None
 
     try:
-        # DeepFace acepta imágenes directamente como arrays
-        embedding_info = DeepFace.represent(img_path=image, model_name="Facenet512", enforce_detection=False)
-        embedding_vector = embedding_info[0]["embedding"]
-        return np.array(embedding_vector)
+        embedding_info = DeepFace.represent(
+            img_path=image,
+            model_name="Facenet512",
+            enforce_detection=False,
+            detector_backend="opencv"
+            # DeepFace cargará el modelo internamente
+        )
+        if embedding_info and isinstance(embedding_info, list) and len(embedding_info) > 0:
+            embedding_vector = embedding_info[0]["embedding"]
+            return np.array(embedding_vector)
+        else:
+            print("⚠️ No se pudo obtener la información del embedding.")
+            return None
 
     except Exception as e:
         print("❌ Error generando embedding:", e)
         return None
-
 
 def generar_y_guardar_embeddings():
     """
@@ -54,7 +63,9 @@ def generar_y_guardar_embeddings():
         embedding = get_embedding(img)
 
         if embedding is not None:
+            print(f"📊 Shape del embedding antes de guardar: {embedding.shape}")
             embedding_json = json.dumps(embedding.tolist())
+            print(f"💾 Embedding JSON a guardar: {embedding_json}")
             cursor.execute("UPDATE estudiantes SET embedding = %s WHERE id = %s", (embedding_json, estudiante["id"]))
             conn.commit()
             print(f"✅ Embedding guardado para {estudiante['nombre']}.")

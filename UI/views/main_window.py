@@ -9,17 +9,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 
 from face_recognition.embedder import get_embedding
 from face_recognition.detect_face import detect_faces
-from database.db import buscar_estudiante_por_embedding, registrar_asistencia
-from deepface import DeepFace  # Para precargar modelo
-
-# 🚀 Precargar el modelo solo una vez al inicio
-model = DeepFace.build_model("Facenet")
+from database.db import buscar_embedding_en_db
+from attendance.attendance import registrar_asistencia
+from deepface import DeepFace  # Para precargar modelo (ya no se usa directamente aquí)
 
 class AttendixApp(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Attendix - Reconocimiento Facial")
         self.setGeometry(100, 100, 800, 600)
+
+        # 🚀 Precargar el modelo solo una vez al inicio (comentado para carga interna en get_embedding)
+        # self.model = DeepFace.build_model("Facenet512")
 
         self.image_label = QLabel("📷 Cámara no iniciada", self)
         self.image_label.setStyleSheet("background-color: #000; color: white; font-size: 18px;")
@@ -48,10 +49,11 @@ class AttendixApp(QMainWindow):
         self.frame_count = 0  # 🧠 Para escanear rostros cada N frames
 
     def start_camera(self):
-        self.cap = cv2.VideoCapture(0)  # 1 logitech, 0 laptop
+        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # 0 logitech, 1 laptop
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)   # Menor resolución = mejor rendimiento
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        
+        self.cap.set(cv2.CAP_PROP_FPS, 24)
+
         if not self.cap.isOpened():
             self.status_label.setText("❌ No se pudo acceder a la cámara.")
             return
@@ -81,8 +83,8 @@ class AttendixApp(QMainWindow):
         for (x, y, w, h) in faces:
             face_img = frame[y:y+h, x:x+w]
             face_img = cv2.resize(face_img, (160, 160))
-            embedding = get_embedding(face_img, model=model)  # Usar modelo precargado
-            estudiante = buscar_estudiante_por_embedding(embedding)
+            embedding = get_embedding(face_img)  # Ya no pasamos el modelo precargado
+            estudiante = buscar_embedding_en_db(embedding)
 
             if estudiante:
                 registrar_asistencia(estudiante["id"])
