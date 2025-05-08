@@ -1,27 +1,86 @@
+import cv2
 import numpy as np
+import mysql.connector
+from config import DB_HOST, DB_USER, DB_PASSWORD, DB_NAME
+import json
+from face_recognition.detect_face import detect_faces
+from face_recognition.embedder import get_embedding
 
-def cosine_similarity(emb1, emb2):
-    return np.dot(emb1, emb2) / (np.linalg.norm(emb1) * np.linalg.norm(emb2))
+def get_connection():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
+    )
 
-def euclidean_distance(emb1, emb2):
-    return np.linalg.norm(np.array(emb1) - np.array(emb2))
+def get_embedding_db(nombre_estudiante):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT embedding FROM estudiantes WHERE nombre = %s"
+    cursor.execute(query, (nombre_estudiante,))
+    resultado = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if resultado and resultado['embedding']:
+        return np.array(json.loads(resultado['embedding']))
+    else:
+        return None
 
-def parse_embedding(embedding_str):
-    """ Convierte una cadena sin comas en una lista de floats """
-    return [float(x) for x in embedding_str.split()]
+# --- Configura tu nombre tal como aparece en la base de datos ---
+tu_nombre_en_db = "Camila Velázquez"  # Reemplaza con tu nombre exacto
 
-# 🔹 Definir los embeddings como strings sin comas
-embedding_1_str = ""
-embedding_2_str = ""
+# --- Inicializar la cámara ---
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Error: No se pudo abrir la cámara.")
+    exit()
 
-# 🔹 Convertir a listas de floats
-embedding_1 = parse_embedding(embedding_1_str)
-embedding_2 = parse_embedding(embedding_2_str)
+print("Presiona 's' para capturar un frame y comparar el embedding, o 'q' para salir.")
 
-# 🔹 Cálculo de similitud y distancia
-cos_sim = cosine_similarity(embedding_1, embedding_2)
-euc_dist = euclidean_distance(embedding_1, embedding_2)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("Error al leer el frame.")
+        break
 
-# 🔹 Mostrar resultados
-print(f"📊 Similitud del coseno: {cos_sim:.4f}")
-print(f"📏 Distancia euclidiana: {euc_dist:.4f}")
+    cv2.imshow('Captura de Cámara (Presiona \'s\' para comparar)', frame)
+
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
+        break
+    elif key == ord('s'):
+        faces = detect_faces(frame)
+        if isinstance(faces, np.ndarray) and faces.ndim > 1 and faces.shape[1] == 4:
+            # Si detect_faces devuelve un array de NumPy con las coordenadas
+            x, y, w, h = faces[0]
+            face_img = frame[y:y+h, x:x+w]
+            face_img_resized = cv2.resize(face_img, (160, 160))
+            embedding_actual = get_embedding(face_img_resized)
+
+            embedding_db = get_embedding_db(tu_nombre_en_db)
+
+            if embedding_db is not None:
+                distancia = np.linalg.norm(embedding_actual - embedding_db)
+                print(f"\nDistancia entre el embedding actual de la cámara y el de '{tu_nombre_en_db}' en la base de datos: {distancia}")
+            else:
+                print(f"Error: No se encontró el embedding para '{tu_nombre_en_db}' en la base de datos o está vacío.")
+        elif isinstance(faces, list) and len(faces) > 0 and len(faces[0]) == 4:
+            # Si detect_faces devuelve una lista de listas o tuplas con las coordenadas
+            x, y, w, h = faces[0]
+            face_img = frame[y:y+h, x:x+w]
+            face_img_resized = cv2.resize(face_img, (160, 160))
+            embedding_actual = get_embedding(face_img_resized)
+
+            embedding_db = get_embedding_db(tu_nombre_en_db)
+
+            if embedding_db is not None:
+                distancia = np.linalg.norm(embedding_actual - embedding_db)
+                print(f"\nDistancia entre el embedding actual de la cámara y el de '{tu_nombre_en_db}' en la base de datos: {distancia}")
+            else:
+                print(f"Error: No se encontró el embedding para '{tu_nombre_en_db}' en la base de datos o está vacío.")
+        else:
+            print("No se detectó ningún rostro en el frame.")
+
+cap.release()
+cv2.destroyAllWindows()

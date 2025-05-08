@@ -1,31 +1,59 @@
-# para obtener embeddings de las fotos!
-
-from deepface import DeepFace
+# para obtener embeddings de la camara!
+import cv2
 import numpy as np
+from face_recognition.detect_face import detect_faces
+from face_recognition.embedder import get_embedding
+import json
 
-def obtener_embedding_consola(ruta_imagen, model_name="ArcFace"):
-    """
-    Obtiene el embedding facial de una imagen y lo imprime en la consola
-    como un string separado por comas.
+# --- Inicializar la cámara ---
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("Error: No se pudo abrir la cámara.")
+    exit()
 
-    Args:
-        ruta_imagen (str): Ruta de la imagen.
-        model_name (str): Nombre del modelo de DeepFace a utilizar.
-    """
-    try:
-        embedding_list = DeepFace.represent(img_path=ruta_imagen, model_name=model_name, enforce_detection=True)
-        if embedding_list:
-            embedding_array = embedding_list[0]['embedding']
-            embedding_str = ",".join(map(str, embedding_array))
-            print("Embedding facial:")
-            print(embedding_str)
-            print(f"\nLongitud del embedding: {len(embedding_array)}")
+print("Presiona 's' para capturar un frame, detectar el rostro y mostrar su embedding en la terminal (formato para base de datos), o 'q' para salir.")
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("Error al leer el frame.")
+        break
+
+    cv2.imshow('Captura de Cámara (Presiona \'s\' para obtener embedding)', frame)
+
+    key = cv2.waitKey(1) & 0xFF
+    if key == ord('q'):
+        break
+    elif key == ord('s'):
+        faces = detect_faces(frame)
+        if isinstance(faces, np.ndarray):
+            if faces.size > 0:
+                # Asumiendo que detect_faces devuelve un array donde cada fila es un rostro [x, y, w, h]
+                (x, y, w, h) = faces[0].astype(int)
+                face_img = frame[y:y+h, x:x+w]
+                face_img_resized = cv2.resize(face_img, (160, 160))
+                embedding_actual = get_embedding(face_img_resized)
+
+                print("\nEmbedding del rostro detectado: ", end="")
+                print(json.dumps(embedding_actual.tolist(), separators=(',', ':')), end="")
+                print() # Añade una nueva línea al final para la siguiente operación
+            else:
+                print("No se detectó ningún rostro en el frame.")
+        elif isinstance(faces, list):
+            if len(faces) > 0:
+                # Asumiendo que detect_faces devuelve una lista de listas o tuplas [x, y, w, h]
+                (x, y, w, h) = map(int, faces[0])
+                face_img = frame[y:y+h, x:x+w]
+                face_img_resized = cv2.resize(face_img, (160, 160))
+                embedding_actual = get_embedding(face_img_resized)
+
+                print("\nEmbedding del rostro detectado: ", end="")
+                print(json.dumps(embedding_actual.tolist(), separators=(',', ':')), end="")
+                print() # Añade una nueva línea al final para la siguiente operación
+            else:
+                print("No se detectó ningún rostro en el frame.")
         else:
-            print(f"No se detectaron rostros en la imagen: {ruta_imagen}")
-    except Exception as e:
-        print(f"Ocurrió un error al procesar la imagen {ruta_imagen}: {e}")
+            print("No se detectó ningún rostro en el frame.")
 
-# Ejemplo de uso para una foto específica
-ruta_de_la_foto = r"C:\Users\Camila\Desktop\database\foticos\5122997309922192770.jpg"  # ¡Reemplaza con la ruta de tu foto!
-
-obtener_embedding_consola(ruta_de_la_foto)
+cap.release()
+cv2.destroyAllWindows()

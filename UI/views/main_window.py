@@ -49,10 +49,10 @@ class AttendixApp(QMainWindow):
         self.frame_count = 0  # 🧠 Para escanear rostros cada N frames
 
     def start_camera(self):
-        self.cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  #0 laptop, 1 logitech
+        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  #0 laptop, 1 logitech
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)   # Menor resolución = mejor rendimiento
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        self.cap.set(cv2.CAP_PROP_FPS, 24)
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
 
         if not self.cap.isOpened():
             self.status_label.setText("❌ No se pudo acceder a la cámara.")
@@ -67,7 +67,7 @@ class AttendixApp(QMainWindow):
         self.image_label.setText("📷 Cámara detenida.")
         self.status_label.setText("🟡 Esperando acción...")
 
-    def update_frame(self):
+    def update_frame(self):  # sourcery skip: use-named-expression
         ret, frame = self.cap.read()
         if not ret:
             self.status_label.setText("❌ Error al leer el frame.")
