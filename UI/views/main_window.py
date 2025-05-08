@@ -49,7 +49,7 @@ class AttendixApp(QMainWindow):
         self.frame_count = 0  # 🧠 Para escanear rostros cada N frames
 
     def start_camera(self):
-        self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)  # 0 logitech, 1 laptop
+        self.cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)  #0 laptop, 1 logitech
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)   # Menor resolución = mejor rendimiento
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         self.cap.set(cv2.CAP_PROP_FPS, 24)
