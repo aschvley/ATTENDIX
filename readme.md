@@ -1,5 +1,6 @@
 # 🧠 Attendix — Sistema de Asistencia con Reconocimiento Facial
 **Attendix** es un sistema inteligente que automatiza el registro de asistencia de estudiantes mediante reconocimiento facial, utilizando Python, OpenCV, DeepFace y una base de datos MySQL.
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/aschvley/ATTENDIX)
 
 ---
 
